@@ -3,7 +3,7 @@
 /**
  * Module dependencies.
  */
-
+require("dotenv").config();
 var app = require("../app");
 var debug = require("debug")("arduino:server");
 var http = require("http");
@@ -13,7 +13,8 @@ const { startSockerServer } = require("./socketServer");
  */
 
 var port = normalizePort(process.env.PORT || "3000");
-app.set("port", port);
+console.log(process.env.COM_NAME);
+
 /**
  * Create HTTP server.
  */
@@ -24,7 +25,7 @@ startSockerServer(server);
 /**
  * Listen on provided port, on all network interfaces.
  */
-const { SerialPort } = require("serialport");
+// const { SerialPort } = require("serialport");
 
 // var arduinoCOMPort = "COM6";
 // var arduinoSerialPort = new SerialPort({
