@@ -5,13 +5,133 @@
     <link rel="stylesheet" href="/stylesheets/style.css" />
   </head>
   <script src="/javascripts/socket.io.js"></script>
+  <script src="/javascripts/tailwind.min.js"></script>
+  <script src="/javascripts/vue.min.js"></script>
 
   <body>
-    <h1><%= title %></h1>
-    <p>Welcome to <%= title %></p>
+    <h1 class="mb-6 text-lg font-bold">Thông số cảm biến</h1>
+    <div id="app" class="flex flex-col gap-4">
+      <div v-for="key in Object.keys(sensorsConfig)" class="flex gap-2">
+        <div class="flex-0 font-semibold" style="width: 240px">
+          {{ sensorsConfig[key].name }}
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-4 dark:bg-gray-700">
+          <div
+            class="h-4 rounded-full"
+            :style="{
+              width: (sensorValue[key] / (sensorsConfig[key].max - sensorsConfig[key].min) * 100 )+ '%' ,
+              background: getColorBar(sensorValue[key], sensorsConfig[key].status) 
+            }"
+          ></div>
+        </div>
+        <div class="flex-0" style="width: 240px">
+          <b>
+            {{ sensorValue[key] }}
+          </b>
+          {{ sensorsConfig[key].unit }}
+        </div>
+      </div>
+    </div>
+    <script>
+      new Vue({
+        el: "#app",
+        data: {
+          sensorValue: {
+            fire: 0,
+            smoke: 0,
+            water: 0,
+            temperature: 20,
+            humidity: 0,
+            sound: 0,
+            status: [],
+          },
+          sensorsConfig: {
+            fire: {
+              name: "Fire (Lửa)",
+              unit: "",
+              max: 10000,
+              min: 0,
+              status: [
+                {
+                  range: [50, 150],
+                  color: "#fde047",
+                },
+                {
+                  range: [25, 50],
+                  color: "#f43f5e",
+                },
+                {
+                  range: [25, 50],
+                  color: "#4c0519",
+                },
+              ],
+            },
+            smoke: {
+              name: "Smoke (Khói)",
+              unit: "",
+              max: 1000,
+              min: 0,
+              status: [],
+            },
+            water: {
+              name: "Water (Mực nước)",
+              unit: "",
+              max: 10000,
+              min: 0,
+            },
+            temperature: {
+              name: "Temperature (Nhiệt độ)",
+              unit: "°C",
+
+              max: 60,
+              min: -10,
+              status: [
+                {
+                  range: [15, 50],
+                  color: "#4c0519",
+                },
+              ],
+            },
+            humidity: {
+              name: "Humidity (Độ ẩm)",
+              max: 100,
+              min: 0,
+              unit: "%",
+              status: [],
+            },
+            sound: {
+              name: "Sound (Âm thanh)",
+              max: 500,
+              min: 0,
+              unit: "Hz",
+              status: [],
+            },
+          },
+        },
+        methods: {
+          getColorBar(value, config) {
+            const currentRange = Array.isArray(config)
+              ? config.find(
+                  (item) => item.range[0] <= value && value <= item.range[1]
+                )
+              : null;
+
+            if (currentRange) return currentRange.color;
+            else return "#2563eb";
+          },
+        },
+        mounted() {
+          const socket = io("http://localhost:3000");
+          // console.log(this._data);
+
+          socket.on("new-data", (data) => {
+            this.sensorValue = {
+              ...this.sensorValue,
+              ...data,
+            };
+          });
+        },
+      });
+    </script>
   </body>
-  <script>
-    const socket = io("http://localhost:3000");
-    socket.on("send-data", (data) => console.log(data));
-  </script>
 </html>
